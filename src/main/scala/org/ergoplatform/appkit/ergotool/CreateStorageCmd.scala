@@ -43,7 +43,7 @@ case class CreateStorageCmd
     if (Files.exists(storagePath)) error(s"File $storagePath already exists")
 
     val mnemonic = Mnemonic.create(mnemonicPhrase, mnemonicPass)
-    val storage = SecretStorage.createFromMnemonicIn(storageDir, mnemonic, storagePass)
+    val storage = SecretStorage.createFromMnemonicIn(storageDir, mnemonic, storagePass, false)
     storagePass.erase()
     val filePath = Files.move(storage.getFile.toPath, Paths.get(storageDir, storageFileName), StandardCopyOption.ATOMIC_MOVE)
     ctx.console.println(s"Storage File: $filePath")

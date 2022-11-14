@@ -1,11 +1,14 @@
 package org.ergoplatform.appkit.ergotool
 
+import org.ergoplatform.wallet.Constants
 import org.ergoplatform.appkit.cli.AppContext
 import org.ergoplatform.appkit.commands.{CmdParameter, NetworkPType, EnumPType, PasswordInput, Cmd, SecretStringPType, StringPType, CmdDescriptor}
 import org.ergoplatform.appkit.config.ErgoToolConfig
 import org.ergoplatform.appkit.{NetworkType, SecretStorage, SecretString}
 import org.ergoplatform.wallet.secrets.ExtendedSecretKeySerializer
 import scorex.util.encode.Base16
+import scorex.util.serialization.VLQByteBufferWriter
+import scorex.util.ByteArrayBuilder
 
 /** Extracts secret data from encrypted storage file (e.g. created by [[CreateStorageCmd]]).
   *
@@ -47,11 +50,14 @@ case class ExtractStorageCmd(
         val secretStr = Base16.encode(ExtendedSecretKeySerializer.toBytes(secret))
         console.println(secretStr)
       case PropSecretKey =>
-        val sk  = Base16.encode(secret.keyBytes)
-        assert(sk == secret.key.w.toString(16), "inconsistent secret")
+        val writer = new VLQByteBufferWriter(new ByteArrayBuilder())
+        ExtendedSecretKeySerializer.serialize(secret, writer)
+        val keyBytes = writer.toBytes.slice(0, Constants.SecretKeyLength)
+        val sk  = Base16.encode(keyBytes)
+        assert(sk == secret.privateInput.w.toString(16), "inconsistent secret")
         console.println(sk)
       case PropPublicKey =>
-        val pk = Base16.encode(secret.key.publicImage.pkBytes)
+        val pk = Base16.encode(secret.publicImage.pkBytes)
         console.println(pk)
       case _ =>
         sys.error(s"Invalid property requested: $prop")

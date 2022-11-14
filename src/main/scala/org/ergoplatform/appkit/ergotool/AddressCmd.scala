@@ -1,11 +1,17 @@
 package org.ergoplatform.appkit.ergotool
 
+import org.ergoplatform.wallet.Constants
+import org.ergoplatform.wallet.secrets.ExtendedSecretKeySerializer
 import org.ergoplatform.appkit.cli.AppContext
 import org.ergoplatform.appkit.commands.{CmdParameter, NetworkPType, Cmd, SecretStringPType, NewPasswordInput, CmdDescriptor}
 import org.ergoplatform.appkit.config.ErgoToolConfig
-import org.ergoplatform.appkit.{NetworkType, Address, SecretString}
+import org.ergoplatform.appkit.{JavaHelpers, NetworkType, Address, SecretString}
 import org.ergoplatform.appkit.commands.PasswordInput
 import org.ergoplatform.appkit.commands.DefaultParameterInput
+import scorex.util.encode.Base16
+import scorex.util.serialization.VLQByteBufferWriter
+import scorex.util.ByteArrayBuilder
+
 
 /** Given [[mnemonic]], [[mnemonicPass]] and [[network]] the command computes
   * the address of the given network type.
@@ -29,8 +35,33 @@ case class AddressCmd
   name: String, network: NetworkType, mnemonic: SecretString, mnemonicPass: SecretString)
   extends Cmd {
   override def run(ctx: AppContext): Unit = {
-    val address = Address.fromMnemonic(network, mnemonic, mnemonicPass)
-    ctx.console.print(address.toString)
+
+    val rootSecret = JavaHelpers.seedToMasterKey(mnemonic, mnemonicPass, false)
+    val writer = new VLQByteBufferWriter(new ByteArrayBuilder())
+    ExtendedSecretKeySerializer.serialize(rootSecret, writer)
+    val keyBytes = writer.toBytes.slice(0, Constants.SecretKeyLength)
+    ctx.console.println(s"Secret root: ${Base16.encode(keyBytes)}")
+
+    // Let's use "m/44'/429'/0'/0/index" path (this path is compliant with EIP-3 which
+    // is BIP-44 for Ergo)
+    val path = JavaHelpers.eip3DerivationParent()
+    val secretKey = rootSecret.derive(path)
+
+
+    val writer2 = new VLQByteBufferWriter(new ByteArrayBuilder())
+    ExtendedSecretKeySerializer.serialize(secretKey, writer2)
+    val keyBytes2 = writer2.toBytes.slice(0, Constants.SecretKeyLength)
+    ctx.console.println(s"Secret root /0: ${Base16.encode(keyBytes2)}")
+
+
+    val address = Address.fromMnemonic(network, mnemonic, mnemonicPass, false)
+    val address0 = Address.createEip3Address(0, network, mnemonic, mnemonicPass, false)
+    val address1 = Address.createEip3Address(1, network, mnemonic, mnemonicPass, false)
+    val address2 = Address.createEip3Address(2, network, mnemonic, mnemonicPass, false)
+    ctx.console.println(s"Pre-EIP-3: ${address.toString}")
+    ctx.console.println(s"Post-EIP-3 /0: ${address0.toString}")
+    ctx.console.println(s"Post-EIP-3 /1: ${address1.toString}")
+    ctx.console.println(s"Post-EIP-3 /2: ${address2.toString}")
   }
 }
 

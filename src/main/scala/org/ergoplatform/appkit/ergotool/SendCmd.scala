@@ -32,42 +32,43 @@ case class SendCmd( toolConf: ErgoToolConfig, name: String, storageFile: File, s
     if (amountToSend < MinFee) error(s"Please specify amount no less than $MinFee (MinFee)")
 
     val console = runCtx.console
-    ergoClient.execute(ctx => {
-      val senderProver = loggedStep("Creating prover", console) {
-        BoxOperations.createProver(ctx, storageFile.getPath, storagePass).build()
-      }
-      val sender = senderProver.getAddress
-      val unspent = loggedStep(s"Loading unspent boxes from at address $sender", console) {
-        ctx.getUnspentBoxesFor(sender)
-      }
-      val boxesToSpend = BoxOperations.selectTop(unspent, amountToSend + MinFee)
-      val txB = ctx.newTxBuilder
-      val newBox = txB.outBoxBuilder
-        .value(amountToSend)
-        .contract(ctx.compileContract(
-          ConstantsBuilder.create
-            .item("recipientPk", recipient.getPublicKey)
-            .build(),
-          "{ recipientPk }")).build()
-      val tx = txB
-        .boxesToSpend(boxesToSpend).outputs(newBox)
-        .fee(Parameters.MinFee)
-        .sendChangeTo(senderProver.getP2PKAddress)
-        .build()
-      val signed = loggedStep(s"Signing the transaction", console) {
-        senderProver.sign(tx)
-      }
-      if (runCtx.isDryRun) {
-        val txJson = signed.toJson(true)
-        console.println(s"Tx: $txJson")
-      }
-      else {
-        val txId = loggedStep(s"Sending the transaction", console) {
-          ctx.sendTransaction(signed)
-        }
-        console.println(s"Server returned tx id: $txId")
-      }
-    })
+    // TODO : migrate to 4.0.11
+    // ergoClient.execute(ctx => {
+    //   val senderProver = loggedStep("Creating prover", console) {
+    //     BoxOperations.createProver(ctx, storageFile.getPath, storagePass).build()
+    //   }
+    //   val sender = senderProver.getAddress
+    //   val unspent = loggedStep(s"Loading unspent boxes from at address $sender", console) {
+    //     ctx.getUnspentBoxesFor(sender)
+    //   }
+    //   val boxesToSpend = BoxOperations.selectTop(unspent, amountToSend + MinFee)
+    //   val txB = ctx.newTxBuilder
+    //   val newBox = txB.outBoxBuilder
+    //     .value(amountToSend)
+    //     .contract(ctx.compileContract(
+    //       ConstantsBuilder.create
+    //         .item("recipientPk", recipient.getPublicKey)
+    //         .build(),
+    //       "{ recipientPk }")).build()
+    //   val tx = txB
+    //     .boxesToSpend(boxesToSpend).outputs(newBox)
+    //     .fee(Parameters.MinFee)
+    //     .sendChangeTo(senderProver.getP2PKAddress)
+    //     .build()
+    //   val signed = loggedStep(s"Signing the transaction", console) {
+    //     senderProver.sign(tx)
+    //   }
+    //   if (runCtx.isDryRun) {
+    //     val txJson = signed.toJson(true)
+    //     console.println(s"Tx: $txJson")
+    //   }
+    //   else {
+    //     val txId = loggedStep(s"Sending the transaction", console) {
+    //       ctx.sendTransaction(signed)
+    //     }
+    //     console.println(s"Server returned tx id: $txId")
+    //   }
+    // })
   }
 }
 object SendCmd extends CmdDescriptor(

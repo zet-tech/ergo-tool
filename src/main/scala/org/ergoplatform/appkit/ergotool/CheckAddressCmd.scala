@@ -32,7 +32,7 @@ case class CheckAddressCmd(
   override def run(ctx: AppContext): Unit = {
     if (network != address.getNetworkType)
       error(s"Network type of the address ${address.getNetworkType} don't match expected $network")
-    val computedAddress = Address.fromMnemonic(network, mnemonic, mnemonicPass)
+    val computedAddress = Address.fromMnemonic(network, mnemonic, mnemonicPass, false)
     val computedNetwork = computedAddress.getNetworkType
     val okNetwork = computedNetwork == network
     val res = if (okNetwork && computedAddress == address) "Ok" else s"Error"

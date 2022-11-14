@@ -13,26 +13,27 @@ import scala.collection.convert.ImplicitConversions.`iterable AsScalaIterable`
   */
 case class ListAddressTokensCmd(toolConf: ErgoToolConfig, name: String, address: Address) extends Cmd with RunWithErgoClient {
   override def runWithClient(ergoClient: ErgoClient, runCtx: AppContext): Unit = {
-    val res: String = ergoClient.execute(ctx => {
-      val boxes = ctx.getUnspentBoxesFor(address)
-      val boxesWithTokens: Iterable[InputBox] = boxes.filter(_.getTokens.size() > 0)
-      val lines = if (runCtx.isPrintJson) {
-        val ret = for (b <- boxesWithTokens) yield {
-          val tokens = b.getTokens
-          tokens.map(t => "{\"tokenId\":\"" + t.getId + "\",\"amount\":" + t.getValue + "}" ).mkString("", ",\n", "")
-        }
-        ret.mkString("[", ",\n", "]")
-      } else {
-        val ret = for (b <- boxesWithTokens) yield {
-                val tokens = b.getTokens
-                tokens.map(t => s"${t.getId} ${t.getValue}").mkString("", "\n", "")
-             }
-        "TokenId                                                          Amount          \n" +
-        ret.mkString("", "\n", "")
-      }
-      lines
-    })
-    runCtx.console.print(res)
+    // TODO : migrate to 4.0.11
+    // val res: String = ergoClient.execute(ctx => {
+    //   val boxes = ctx.getUnspentBoxesFor(address, false, false)
+    //   val boxesWithTokens: Iterable[InputBox] = boxes.filter(_.getTokens.size() > 0)
+    //   val lines = if (runCtx.isPrintJson) {
+    //     val ret = for (b <- boxesWithTokens) yield {
+    //       val tokens = b.getTokens
+    //       tokens.map(t => "{\"tokenId\":\"" + t.getId + "\",\"amount\":" + t.getValue + "}" ).mkString("", ",\n", "")
+    //     }
+    //     ret.mkString("[", ",\n", "]")
+    //   } else {
+    //     val ret = for (b <- boxesWithTokens) yield {
+    //             val tokens = b.getTokens
+    //             tokens.map(t => s"${t.getId} ${t.getValue}").mkString("", "\n", "")
+    //          }
+    //     "TokenId                                                          Amount          \n" +
+    //     ret.mkString("", "\n", "")
+    //   }
+    //   lines
+    // })
+    // runCtx.console.print(res)
   }
 }
 object ListAddressTokensCmd extends CmdDescriptor(

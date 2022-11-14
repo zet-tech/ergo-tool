@@ -13,19 +13,20 @@ import org.ergoplatform.appkit.{ErgoClient, Address, InputBox}
   */
 case class ListAddressBoxesCmd(toolConf: ErgoToolConfig, name: String, address: Address, limit: Int) extends Cmd with RunWithErgoClient {
   override def runWithClient(ergoClient: ErgoClient, runCtx: AppContext): Unit = {
-    val res: String = ergoClient.execute(ctx => {
-      val boxes = ctx.getUnspentBoxesFor(address)
-        .convertTo[IndexedSeq[InputBox]]
-        .take(this.limit)
-      val lines = if (runCtx.isPrintJson) {
-        boxes.map(b => b.toJson(false)).mkString("[", ",\n", "]")
-      } else {
-        "BoxId                                                             NanoERGs          \n" +
-        boxes.map(b => s"${b.getId}  ${b.getValue}").mkString("\n")
-      }
-      lines
-    })
-    runCtx.console.print(res)
+    // TODO : migrate to 4.0.11
+    // val res: String = ergoClient.execute(ctx => {
+    //   val boxes = ctx.getUnspentBoxesFor(address, false, false)
+    //     .convertTo[IndexedSeq[InputBox]]
+    //     .take(this.limit)
+    //   val lines = if (runCtx.isPrintJson) {
+    //     boxes.map(b => b.toJson(false)).mkString("[", ",\n", "]")
+    //   } else {
+    //     "BoxId                                                             NanoERGs          \n" +
+    //     boxes.map(b => s"${b.getId}  ${b.getValue}").mkString("\n")
+    //   }
+    //   lines
+    // })
+    // runCtx.console.print(res)
   }
 }
 object ListAddressBoxesCmd extends CmdDescriptor(
