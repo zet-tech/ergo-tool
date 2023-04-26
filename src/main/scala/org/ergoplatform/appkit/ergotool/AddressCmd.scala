@@ -40,6 +40,7 @@ case class AddressCmd
     val writer = new VLQByteBufferWriter(new ByteArrayBuilder())
     ExtendedSecretKeySerializer.serialize(rootSecret, writer)
     val keyBytes = writer.toBytes.slice(0, Constants.SecretKeyLength)
+    ctx.console.println(s"Public root /0: ${rootSecret.publicKey.toString}")
     ctx.console.println(s"Secret root: ${Base16.encode(keyBytes)}")
 
     // Let's use "m/44'/429'/0'/0/index" path (this path is compliant with EIP-3 which
@@ -47,11 +48,12 @@ case class AddressCmd
     val path = JavaHelpers.eip3DerivationParent()
     val secretKey = rootSecret.derive(path)
 
+    ctx.console.println(s"Public key /0: ${secretKey.publicKey.toString}")
 
     val writer2 = new VLQByteBufferWriter(new ByteArrayBuilder())
     ExtendedSecretKeySerializer.serialize(secretKey, writer2)
     val keyBytes2 = writer2.toBytes.slice(0, Constants.SecretKeyLength)
-    ctx.console.println(s"Secret root /0: ${Base16.encode(keyBytes2)}")
+    ctx.console.println(s"Secret key /0: ${Base16.encode(keyBytes2)}")
 
 
     val address = Address.fromMnemonic(network, mnemonic, mnemonicPass, false)
